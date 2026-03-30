@@ -141,6 +141,7 @@ jobs:
         arch:
           - amd64
           - arm64
+          - riscv64
         include:
           - os: linux
             arch: amd64
@@ -163,6 +164,9 @@ jobs:
           - os: windows
             arch: arm64
             runner: windows-11-arm
+          - os: linux
+            arch: riscv64
+            runner: ubuntu-24.04-riscv
         exclude:
           - os: macos-26
             arch: amd64
@@ -301,6 +305,7 @@ jobs:
         arch:
           - amd64
           - arm64
+          - riscv64
         include:
           - os: linux
             arch: amd64
@@ -330,6 +335,10 @@ jobs:
             arch: arm64
             runner: windows-11-arm
             platform: windows-arm64
+          - os: linux
+            arch: riscv64
+            runner: ubuntu-24.04-riscv
+            platform: linux-riscv64
         exclude:
           - os: macos-26
             arch: amd64
