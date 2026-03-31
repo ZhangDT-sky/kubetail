@@ -141,7 +141,6 @@ jobs:
         arch:
           - amd64
           - arm64
-          - riscv64
         include:
           - os: linux
             arch: amd64
@@ -164,9 +163,6 @@ jobs:
           - os: windows
             arch: arm64
             runner: windows-11-arm
-          - os: linux
-            arch: riscv64
-            runner: ubuntu-24.04-riscv
         exclude:
           - os: macos-26
             arch: amd64
@@ -183,6 +179,25 @@ jobs:
         if: ${{ !(matrix.os == 'windows' && matrix.arch == 'arm64') }}
         working-directory: ./modules/${{ matrix.module }}
         run: go test -race ./...
+
+  modules-test-riscv64:
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        module:
+          - cli
+          - cluster-api
+          - dashboard
+          - shared
+    runs-on: ubuntu-24.04-riscv
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-environment
+        with:
+          setup-go: "true"
+      - name: Run tests
+        working-directory: ./modules/${{ matrix.module }}
+        run: go test ./...
 
   dashboard-ui-lint:
     runs-on: ubuntu-24.04
@@ -305,7 +320,6 @@ jobs:
         arch:
           - amd64
           - arm64
-          - riscv64
         include:
           - os: linux
             arch: amd64
@@ -335,10 +349,6 @@ jobs:
             arch: arm64
             runner: windows-11-arm
             platform: windows-arm64
-          - os: linux
-            arch: riscv64
-            runner: ubuntu-24.04-riscv
-            platform: linux-riscv64
         exclude:
           - os: macos-26
             arch: amd64
@@ -353,6 +363,30 @@ jobs:
         run: make build
         env:
           PLATFORM: ${{ matrix.platform }}
+
+  cli-builds-riscv64:
+    needs:
+      - crates-build
+      - crates-lint
+      - crates-vet
+      - crates-test
+      - modules-lint
+      - modules-vet
+      - modules-test-riscv64
+      - dashboard-ui-lint
+      - dashboard-ui-test
+      - dashboard-ui-build
+    runs-on: ubuntu-24.04-riscv
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-environment
+        with:
+          setup-node: "true"
+          setup-go: "true"
+      - name: Build
+        run: make build
+        env:
+          PLATFORM: linux-riscv64
 
   alpine-builds:
     needs:
