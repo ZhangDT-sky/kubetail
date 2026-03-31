@@ -364,30 +364,6 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
 
-  cli-builds-riscv64:
-    needs:
-      - crates-build
-      - crates-lint
-      - crates-vet
-      - crates-test
-      - modules-lint
-      - modules-vet
-      - modules-test-riscv64
-      - dashboard-ui-lint
-      - dashboard-ui-test
-      - dashboard-ui-build
-    runs-on: ubuntu-24.04-riscv
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-environment
-        with:
-          setup-node: "true"
-          setup-go: "true"
-      - name: Build
-        run: make build
-        env:
-          PLATFORM: linux-riscv64
-
   alpine-builds:
     needs:
       - crates-build
