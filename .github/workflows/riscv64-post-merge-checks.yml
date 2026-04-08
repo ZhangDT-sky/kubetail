@@ -11,7 +11,6 @@ on:
 
 jobs:
   modules-test-riscv64:
-    timeout-minutes: 60
     strategy:
       matrix:
         module:
@@ -30,7 +29,6 @@ jobs:
         run: go test ./...
 
   docker-builds:
-    timeout-minutes: 20
     strategy:
       matrix:
         component:
