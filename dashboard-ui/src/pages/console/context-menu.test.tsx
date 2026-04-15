@@ -151,23 +151,30 @@ describe('CellContextMenu', () => {
     });
 
     it('falls back to writeText when ClipboardItem is unavailable', async () => {
-      const { clipboard } = navigator;
-      const globalWithOptionalClipboardItem = globalThis as typeof globalThis & {
-        ClipboardItem?: typeof ClipboardItem;
-      };
-      const originalClipboardItem = globalWithOptionalClipboardItem.ClipboardItem;
-      Reflect.deleteProperty(globalWithOptionalClipboardItem, 'ClipboardItem');
-      Object.assign(navigator, {
-        clipboard: { ...clipboard, write: undefined },
-      });
+      const savedClipboardItem = globalThis.ClipboardItem;
+      vi.stubGlobal('ClipboardItem', undefined);
 
       try {
         renderWithContextMenu(ViewerColumn.Message);
         await openContextMenu();
         fireEvent.click(screen.getByText('Copy message (ANSI)'));
+
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith('\x1b[31mERROR\x1b[0m: something failed');
+        expect(navigator.clipboard.write).not.toHaveBeenCalled();
       } finally {
-        globalWithOptionalClipboardItem.ClipboardItem = originalClipboardItem;
+        vi.stubGlobal('ClipboardItem', savedClipboardItem);
       }
+    });
+
+    it('falls back to writeText when clipboard.write is unavailable', async () => {
+      // Replace clipboard with one that only has writeText (no write)
+      Object.assign(navigator, {
+        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+      });
+
+      renderWithContextMenu(ViewerColumn.Message);
+      await openContextMenu();
+      fireEvent.click(screen.getByText('Copy message (ANSI)'));
 
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('\x1b[31mERROR\x1b[0m: something failed');
     });
