@@ -32,7 +32,17 @@ class ResizeObserverMock {
   disconnect = vi.fn();
 }
 
+class ClipboardItemMock {
+  // Store incoming clipboard representations so tests can introspect if needed.
+  items: Record<string, Blob>;
+
+  constructor(items: Record<string, Blob>) {
+    this.items = items;
+  }
+}
+
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+vi.stubGlobal('ClipboardItem', ClipboardItemMock);
 vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => window.setTimeout(callback, 0));
 vi.stubGlobal('cancelAnimationFrame', (id: number) => window.clearTimeout(id));
 
