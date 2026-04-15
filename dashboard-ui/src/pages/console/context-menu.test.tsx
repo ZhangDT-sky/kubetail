@@ -34,7 +34,7 @@ const makeRecord = (overrides: Partial<LogRecord> = {}): LogRecord => ({
 
 beforeEach(() => {
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { write: vi.fn().mockResolvedValue(undefined), writeText: vi.fn().mockResolvedValue(undefined) },
   });
 });
 
@@ -146,6 +146,26 @@ describe('CellContextMenu', () => {
       renderWithContextMenu(ViewerColumn.Message);
       await openContextMenu();
       fireEvent.click(screen.getByText('Copy message (ANSI)'));
+      expect(navigator.clipboard.write).toHaveBeenCalledTimes(1);
+      expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+    });
+
+    it('falls back to writeText when ClipboardItem is unavailable', async () => {
+      const { clipboard } = navigator;
+      const originalClipboardItem = globalThis.ClipboardItem;
+      delete (globalThis as typeof globalThis & { ClipboardItem?: typeof ClipboardItem }).ClipboardItem;
+      Object.assign(navigator, {
+        clipboard: { ...clipboard, write: undefined },
+      });
+
+      try {
+        renderWithContextMenu(ViewerColumn.Message);
+        await openContextMenu();
+        fireEvent.click(screen.getByText('Copy message (ANSI)'));
+      } finally {
+        globalThis.ClipboardItem = originalClipboardItem;
+      }
+
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('\x1b[31mERROR\x1b[0m: something failed');
     });
   });

@@ -35,6 +35,18 @@ function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
 }
 
+function copyAnsiToClipboard(text: string) {
+  if (typeof navigator.clipboard.write === 'function' && typeof ClipboardItem !== 'undefined') {
+    const item = new ClipboardItem({
+      'text/plain': new Blob([text], { type: 'text/plain' }),
+    });
+    navigator.clipboard.write([item]);
+    return;
+  }
+
+  navigator.clipboard.writeText(text);
+}
+
 function TimestampMenuContent({ record }: { record: LogRecord }) {
   const tsWithTZ = toZonedTime(record.timestamp, 'UTC');
   const displayed = format(tsWithTZ, 'LLL dd, y HH:mm:ss.SSS', { timeZone: 'UTC' });
@@ -67,7 +79,7 @@ function MessageMenuContent({ record }: { record: LogRecord }) {
   return (
     <>
       <ContextMenuItem onSelect={() => copyToClipboard(stripAnsi(record.message))}>Copy message</ContextMenuItem>
-      <ContextMenuItem onSelect={() => copyToClipboard(record.message)}>Copy message (ANSI)</ContextMenuItem>
+      <ContextMenuItem onSelect={() => copyAnsiToClipboard(record.message)}>Copy message (ANSI)</ContextMenuItem>
     </>
   );
 }
