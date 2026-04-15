@@ -152,8 +152,11 @@ describe('CellContextMenu', () => {
 
     it('falls back to writeText when ClipboardItem is unavailable', async () => {
       const { clipboard } = navigator;
-      const originalClipboardItem = globalThis.ClipboardItem;
-      delete (globalThis as typeof globalThis & { ClipboardItem?: typeof ClipboardItem }).ClipboardItem;
+      const globalWithOptionalClipboardItem = globalThis as typeof globalThis & {
+        ClipboardItem?: typeof ClipboardItem;
+      };
+      const originalClipboardItem = globalWithOptionalClipboardItem.ClipboardItem;
+      Reflect.deleteProperty(globalWithOptionalClipboardItem, 'ClipboardItem');
       Object.assign(navigator, {
         clipboard: { ...clipboard, write: undefined },
       });
@@ -163,7 +166,7 @@ describe('CellContextMenu', () => {
         await openContextMenu();
         fireEvent.click(screen.getByText('Copy message (ANSI)'));
       } finally {
-        globalThis.ClipboardItem = originalClipboardItem;
+        globalWithOptionalClipboardItem.ClipboardItem = originalClipboardItem;
       }
 
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('\x1b[31mERROR\x1b[0m: something failed');
