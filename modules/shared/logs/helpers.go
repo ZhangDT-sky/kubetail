@@ -236,13 +236,17 @@ func mergeLogStreams(ctx context.Context, reverse bool, streams ...<-chan LogRec
 
 		// Initialize the heap with the first entry from each stream
 		for _, ch := range streams {
-			// Read one entry if available
-			entry, ok := <-ch
-			if ok {
-				heap.Push(pq, recordWithSource{
-					record: entry,
-					srcCh:  ch,
-				})
+			// Read one entry if available, with context cancellation check
+			select {
+			case <-ctx.Done():
+				return
+			case entry, ok := <-ch:
+				if ok {
+					heap.Push(pq, recordWithSource{
+						record: entry,
+						srcCh:  ch,
+					})
+				}
 			}
 		}
 
@@ -258,13 +262,17 @@ func mergeLogStreams(ctx context.Context, reverse bool, streams ...<-chan LogRec
 			case outCh <- earliest.record:
 			}
 
-			// Read the next entry from the same source channel
-			entry, ok := <-earliest.srcCh
-			if ok {
-				heap.Push(pq, recordWithSource{
-					record: entry,
-					srcCh:  earliest.srcCh,
-				})
+			// Read the next entry from the same source channel, with context cancellation check
+			select {
+			case <-ctx.Done():
+				return
+			case entry, ok := <-earliest.srcCh:
+				if ok {
+					heap.Push(pq, recordWithSource{
+						record: entry,
+						srcCh:  earliest.srcCh,
+					})
+				}
 			}
 		}
 	}()
